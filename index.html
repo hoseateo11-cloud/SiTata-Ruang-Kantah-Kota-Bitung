@@ -171,81 +171,61 @@
 
         // --- 2. PEWARNAAN LENGKAP (LOGIKA UTAMA) ---
         // Warna diambil berdasarkan standar umum RTRW di Indonesia
-        function getColor(pola) {
-            if (!pola) return '#808080';
-            
-            // Tips: String matching kita buat agar tidak sensitif huruf besar/kecil jika perlu
-            // Tapi di sini kita pakai exact match sesuai data GeoJSON umumnya.
+function getColor(pola) {
+            if (!pola) return '#F0E68C'; // Default Khaki (Bukan Abu-abu lagi)
             
             switch (pola) {
-                // --- KAWASAN LINDUNG (HIJAU/BIRU) ---
+                // --- KAWASAN PERTANIAN & BUDIDAYA (YANG SEBELUMNYA ABU-ABU) ---
+                case 'Pertanian':                       return '#FFA500'; // Orange
+                case 'Kawasan Pertanian':               return '#FFA500'; 
+                case 'Pertanian Lahan Kering':          return '#F4A460'; // SandyBrown
+                case 'Pertanian Lahan Basah':           return '#9ACD32'; // YellowGreen
+                case 'Perkebunan':                      return '#D2691E'; // Chocolate
+                case 'Perikanan':                       return '#FF7F50'; // Coral (Oranye Kemerahan)
+                case 'Budidaya Perikanan':              return '#FF7F50';
+                case 'Kawasan Budidaya':                return '#DAA520'; // GoldenRod
+                
+                // --- KAWASAN LINDUNG ---
                 case 'Kawasan Hutan Lindung':           return '#228B22'; // ForestGreen
                 case 'Hutan Lindung':                   return '#228B22';
-                case 'Hutan Produksi Terbatas':         return '#3CB371'; // MediumSeaGreen
-                case 'Hutan Produksi Tetap':            return '#2E8B57'; // SeaGreen
-                case 'Cagar Alam':                      return '#006400'; // DarkGreen
-                case 'Suaka Alam':                      return '#006400';
-                case 'Taman Wisata Alam':               return '#32CD32'; // LimeGreen
-                case 'RTH':                             return '#7CFC00'; // LawnGreen
-                case 'Resapan Air':                     return '#98FB98'; // PaleGreen
-                case 'Sempadan Sungai dan Pantai':      return '#00FA9A'; // MediumSpringGreen
-                case 'Kawasan Wilayah Pesisir dan Pulau Kecil': return '#40E0D0'; // Turquoise
-                case 'Bakau':                           return '#008080'; // Teal
-                case 'Mangrove':                        return '#008080';
+                case 'Hutan Produksi Terbatas':         return '#3CB371'; 
+                case 'Hutan Produksi Tetap':            return '#2E8B57'; 
+                case 'Cagar Alam':                      return '#006400'; 
+                case 'Taman Wisata Alam':               return '#32CD32'; 
+                case 'RTH':                             return '#7CFC00'; 
+                case 'Resapan Air':                     return '#98FB98'; 
+                case 'Sempadan Sungai dan Pantai':      return '#00FA9A'; 
+                case 'Bakau':                           return '#008080'; 
 
-                // --- KAWASAN PERMUKIMAN (KUNING/ORANYE) ---
-                case 'Kawasan Permukiman':              return '#FFFF00'; // Yellow (Standar)
+                // --- PERMUKIMAN & KOTA ---
+                case 'Kawasan Permukiman':              return '#FFFF00'; // Kuning
                 case 'Perumahan':                       return '#FFFF00';
-                case 'Permukiman Perkotaan':            return '#FFD700'; // Gold
-                case 'Permukiman Pedesaan':             return '#F0E68C'; // Khaki
-
-                // --- EKONOMI & BISNIS (MERAH/UNGU/PINK) ---
-                case 'Perdagangan dan Jasa':            return '#FF0000'; // Red (Standar)
-                case 'Kawasan Industri':                return '#8B0000'; // DarkRed
-                case 'Pergudangan':                     return '#800000'; // Maroon
-                case 'Perkantoran':                     return '#8A2BE2'; // BlueViolet
-                case 'Pendidikan':                      return '#FF1493'; // DeepPink
-                case 'Kesehatan':                       return '#FF69B4'; // HotPink
+                case 'Perdagangan dan Jasa':            return '#FF0000'; // Merah
+                case 'Kawasan Industri':                return '#8B0000'; // Merah Tua
+                case 'Perkantoran':                     return '#8A2BE2'; // Ungu
+                case 'Pendidikan':                      return '#FF1493'; 
                 case 'Pariwisata':                      return '#FFC0CB'; // Pink
 
-                // --- TRANSPORTASI (MERAH DARAH) ---
-                case 'Transportasi':                    return '#DC143C'; // Crimson
-                case 'Pelabuhan Laut':                  return '#0000CD'; // MediumBlue
-                case 'Bandar Udara':                    return '#1E90FF'; // DodgerBlue
-                case 'Terminal':                        return '#B22222'; // FireBrick
-
-                // --- PERTANIAN (KUNING KEHIJAUAN/COKLAT) ---
-                case 'Pertanian':                       return '#BDB76B'; // DarkKhaki
-                case 'Pertanian Lahan Kering':          return '#DAA520'; // GoldenRod
-                case 'Pertanian Lahan Basah':           return '#9ACD32'; // YellowGreen
-                case 'Perkebunan':                      return '#CD853F'; // Peru
-                case 'Perikanan':                       return '#F4A460'; // SandyBrown
-
-                // --- ENERGI & TAMBANG (ABU/COKLAT TUA) ---
-                case 'Pertambangan Mineral dan Batubara': return '#A0522D'; // Sienna
-                case 'Pembangkit Tenaga Listrik':       return '#708090'; // SlateGray
+                // --- INFRASTRUKTUR ---
+                case 'Transportasi':                    return '#DC143C'; 
+                case 'Pelabuhan Laut':                  return '#0000CD'; 
+                case 'Bandar Udara':                    return '#1E90FF'; 
                 
-                // --- HANKAM (UNGU TUA) ---
-                case 'Pertahanan dan Keamanan':         return '#4B0082'; // Indigo
-                case 'Militer':                         return '#4B0082';
+                // --- LAINNYA ---
+                case 'Pertambangan Mineral dan Batubara': return '#A0522D';
+                case 'Pertahanan dan Keamanan':         return '#4B0082';
 
-                case 'Badan Air':                       return '#00BFFF'; // DeepSkyBlue
+                case 'Kawasan Peruntukan Lainnya':      return '#F0E68C'; // Khaki (Krem)
                 
-                // Default jika tidak dikenali
-                default: 
-                    // console.log("Missing Color for: " + pola); // Untuk debugging
-                    return '#808080'; 
+                // Default fallback
+                default: return '#F0E68C'; // Ubah default dari abu-abu menjadi Krem
             }
         }
 
         function style(feature) {
             return {
                 fillColor: getColor(feature.properties.POLA_RUANG),
-                weight: 1,
-                opacity: 1,
-                color: 'white', // Garis pinggir putih tipis
-                dashArray: '3',
-                fillOpacity: 0.65 // Sedikit transparan agar basemap terlihat samar
+                weight: 1, opacity: 1, color: 'white', dashArray: '3', fillOpacity: 0.65
             };
         }
 
@@ -255,8 +235,8 @@
                     <div class="popup-content">
                         <h4>${feature.properties.POLA_RUANG || "Zona Tidak Diketahui"}</h4>
                         <table>
-                            <tr><td class="popup-key">Kategori</td><td>: ${feature.properties.KAWASAN_LI || "-"}</td></tr>
-                            <tr><td class="popup-key">Luas</td><td>: ${feature.properties.Hectares ? feature.properties.Hectares.toFixed(2) + ' Ha' : '-'}</td></tr>
+                            <tr><td>Kategori</td><td>: ${feature.properties.KAWASAN_LI || "-"}</td></tr>
+                            <tr><td>Luas</td><td>: ${feature.properties.Hectares ? feature.properties.Hectares.toFixed(2) + ' Ha' : '-'}</td></tr>
                         </table>
                     </div>
                 `;
@@ -381,6 +361,7 @@
     </script>
 </body>
 </html>
+
 
 
 
