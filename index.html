@@ -9,47 +9,86 @@
 
     <style>
         /* Mengatur halaman agar penuh */
-        body { margin: 0; padding: 0; }
+        body { margin: 0; padding: 0; font-family: Arial, sans-serif; }
         #map { height: 100vh; width: 100%; }
 
-        /* Gaya untuk Tombol GPS */
+        /* --- 1. GAYA KOTAK PENCARIAN KOORDINAT --- */
+        .search-box {
+            position: absolute;
+            top: 10px;
+            left: 50px; /* Geser ke kanan sedikit agar tidak menimpa tombol zoom */
+            z-index: 1000;
+            background: white;
+            padding: 5px;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+            display: flex;
+            gap: 5px;
+        }
+        .search-box input {
+            padding: 5px;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            width: 200px;
+        }
+        .search-box button {
+            padding: 5px 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .search-box button:hover { background: #0056b3; }
+
+        /* --- 2. GAYA TOMBOL GPS --- */
         .btn-gps {
             position: absolute;
-            top: 80px; /* Jarak dari atas (di bawah tombol zoom) */
+            top: 80px; 
             left: 10px;
-            z-index: 1000;
+            z-index: 400; 
             background: white;
             padding: 8px 10px;
             border: 2px solid rgba(0,0,0,0.2);
             border-radius: 4px;
             cursor: pointer;
-            font-family: Arial, sans-serif;
             font-size: 14px;
             font-weight: bold;
             box-shadow: 0 2px 5px rgba(0,0,0,0.3);
         }
         .btn-gps:hover { background: #f4f4f4; }
-        .btn-gps:active { background: #e0e0e0; }
-
-        /* Gaya untuk Legenda */
+        
+        /* --- 3. GAYA LEGENDA --- */
         .info {
             padding: 6px 8px;
             font: 12px Arial, Helvetica, sans-serif;
-            background: white;
             background: rgba(255,255,255,0.95);
             box-shadow: 0 0 15px rgba(0,0,0,0.2);
             border-radius: 5px;
-            max-height: 300px;
-            overflow-y: auto; /* Scroll jika legenda terlalu panjang */
+            max-height: 300px; /* Scroll jika terlalu panjang */
+            overflow-y: auto; 
         }
         .legend { line-height: 18px; color: #555; }
         .legend i {
             width: 18px; height: 18px;
             float: left; margin-right: 8px; opacity: 0.7;
+            border: 1px solid #ccc;
+        }
+        /* Mobile adjustment */
+        @media (max-width: 600px) {
+            .search-box { left: 10px; top: 10px; width: 90%; }
+            .search-box input { width: 100%; }
+            .leaflet-control-zoom { display: none; } /* Sembunyikan tombol zoom di HP biar luas */
         }
     </style>
 </head>
 <body>
+
+    <div class="search-box">
+        <input type="text" id="coordInput" placeholder="Contoh: 1.445, 125.15">
+        <button onclick="cariKoordinat()">Cari</button>
+    </div>
 
     <button class="btn-gps" onclick="cariLokasi()">📍 Lokasi Saya</button>
 
@@ -58,62 +97,110 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        // 1. Inisialisasi Peta (Koordinat Bitung)
-        var map = L.map('map').setView([1.445, 125.15], 12);
+        // --- 1. BASEMAPS ---
+        var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap', maxZoom: 19
+        });
 
-        // 2. Tambahkan Basemap
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
-            maxZoom: 19
-        }).addTo(map);
+        var googleSatLayer = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
+            maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google Map'
+        });
 
-        // 3. Logika Warna (Sesuaikan dengan pola ruang di Bitung)
-        function getColor(pola) {
-            // Pastikan penulisan case SAMA PERSIS dengan data di tabel atribut
-            switch (pola) {
-                // KAWASAN LINDUNG (Nuansa Hijau/Biru)
-                case 'Kawasan Hutan Lindung': return '#228B22'; // ForestGreen
-                case 'Hutan Lindung': return '#228B22';
-                case 'RTH': return '#32CD32';                   // LimeGreen
-                case 'Resapan Air': return '#2E8B57';           // SeaGreen
-                case 'Sempadan Sungai dan Pantai': return '#00FA9A';
-                case 'Bakau': return '#008080';
-                
-                // KAWASAN BUDIDAYA
-                case 'Perumahan': return '#FFFF00';             // Kuning
-                case 'Kawasan Pemukiman': return '#FFFF00';
-                case 'Perdagangan dan Jasa': return '#FF4500';  // Oranye Merah
-                case 'Kawasan Industri': return '#8B0000';      // Merah Tua
-                case 'Perkebunan': return '#DAA520';            // GoldenRod
-                case 'Pertanian': return '#DAA520';
-                case 'Pariwisata': return '#FF69B4';            // Pink
-                case 'Perkantoran': return '#800080';           // Ungu
-                case 'Transportasi': return '#DC143C';          // Crimson
-                
-                default: return '#808080'; // Abu-abu jika tidak terdaftar
+        var map = L.map('map', {
+            center: [1.445, 125.15], // Koordinat Bitung
+            zoom: 12,
+            layers: [osmLayer], // Default OSM
+            zoomControl: false // Kita pindahkan zoom control agar tidak tertutup search box
+        });
+        
+        // Tambahkan Zoom Control di pojok kanan bawah saja
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+        // Kontrol Ganti Layer
+        var baseMaps = { "Peta Jalan": osmLayer, "Satelit": googleSatLayer };
+        L.control.layers(baseMaps).addTo(map);
+
+        // --- 2. FUNGSI PENCARIAN KOORDINAT (BARU) ---
+        var searchMarker; // Variabel penanda lokasi pencarian
+
+        function cariKoordinat() {
+            var input = document.getElementById('coordInput').value;
+            
+            // Hapus spasi berlebih
+            var coords = input.split(',');
+
+            if (coords.length === 2) {
+                var lat = parseFloat(coords[0]);
+                var lng = parseFloat(coords[1]);
+
+                if (!isNaN(lat) && !isNaN(lng)) {
+                    // 1. Hapus marker pencarian lama jika ada
+                    if (searchMarker) map.removeLayer(searchMarker);
+
+                    // 2. Buat marker baru
+                    searchMarker = L.marker([lat, lng]).addTo(map)
+                        .bindPopup("<b>Koordinat Dicari:</b><br>" + lat + ", " + lng).openPopup();
+
+                    // 3. Terbang ke lokasi tersebut
+                    map.flyTo([lat, lng], 17); // Zoom level 17 (dekat)
+                } else {
+                    alert("Format salah! Harap masukkan angka.");
+                }
+            } else {
+                alert("Format salah! Gunakan: Latitude, Longitude (Contoh: 1.445, 125.15)");
             }
         }
 
-        // 4. Style GeoJSON
+        // --- 3. LOGIKA PEWARNAAN (Sesuai Data Anda) ---
+        function getColor(pola) {
+            if (!pola) return 'rgba(128,128,128,0.5)';
+            switch (pola) {
+                case 'Kawasan Hutan Lindung': return '#006400'; 
+                case 'Hutan Produksi Terbatas': return '#228B22';
+                case 'Hutan Produksi Tetap': return '#3CB371';
+                case 'Cagar Alam': return '#00FF7F';
+                case 'Taman Wisata Alam': return '#ADFF2F';
+                case 'RTH': return '#32CD32';
+
+                case 'Kawasan Permukiman': return '#FFFF00';
+                case 'Perdagangan dan Jasa': return '#FF4500';
+                case 'Perkantoran': return '#800080';
+                case 'Pendidikan': return '#FF69B4';
+                case 'Kawasan Industri': return '#8B0000';
+                case 'Kawasan Pariwisata': return '#FF1493';
+                case 'Pertahanan dan Keamanan': return '#4B0082';
+                
+                case 'Transportasi': return '#DC143C';
+                case 'Pelabuhan Laut': return '#0000CD';
+                case 'Bandar Udara': return '#1E90FF';
+
+                case 'Pertanian': return '#DAA520';
+                case 'Perikanan': return '#F4A460';
+                case 'Garam': return '#F0E68C';
+
+                case 'Pertambangan Mineral dan Batubara': return '#A52A2A';
+                case 'Pertambangan Minyak dan Gas Bumi': return '#8B4513';
+                case 'Pembangkit Tenaga Listrik': return '#708090';
+
+                case 'Kawasan Peruntukan Lainnya': return '#BDB76B';
+                default: return '#808080'; 
+            }
+        }
+
         function style(feature) {
             return {
-                fillColor: getColor(feature.properties.POLA_RUANG), // Pastikan kolom ini benar
-                weight: 1,
-                opacity: 1,
-                color: 'white',
-                dashArray: '3',
-                fillOpacity: 0.7
+                fillColor: getColor(feature.properties.POLA_RUANG),
+                weight: 1, opacity: 1, color: 'white', dashArray: '3', fillOpacity: 0.6
             };
         }
 
-        // 5. Popup Informasi
         function onEachFeature(feature, layer) {
             if (feature.properties) {
                 var content = `
                     <div style="font-size:14px">
-                        <strong>${feature.properties.POLA_RUANG}</strong><br>
-                        <hr style="margin:5px 0">
-                        Kategori: ${feature.properties.KAWASAN_LI || '-'}<br>
+                        <strong>${feature.properties.POLA_RUANG || "Tanpa Nama"}</strong><br>
+                        <hr style="margin:5px 0;">
+                        Kategori: ${feature.properties.KAWASAN_LI || "-"}<br>
                         Luas: ${feature.properties.Hectares ? feature.properties.Hectares.toFixed(2) + ' Ha' : '-'}
                     </div>
                 `;
@@ -121,70 +208,46 @@
             }
         }
 
-        // 6. Memuat File GeoJSON
+        // --- 4. LOAD GEOJSON ---
         fetch('rtrw_fix.geojson')
             .then(res => res.json())
             .then(data => {
-                L.geoJSON(data, {
-                    style: style,
-                    onEachFeature: onEachFeature
-                }).addTo(map);
+                L.geoJSON(data, { style: style, onEachFeature: onEachFeature }).addTo(map);
             })
-            .catch(err => {
-                console.error(err);
-                alert("Gagal memuat peta. Pastikan file 'rtrw_fix.geojson' ada dan koordinatnya sudah WGS84.");
-            });
+            .catch(err => console.error("Gagal load GeoJSON:", err));
 
-        // 7. Legenda Peta
-        var legend = L.control({position: 'bottomright'});
+        // --- 5. LEGENDA ---
+        var legend = L.control({position: 'bottomright'}); // Pindah ke kanan bawah
         legend.onAdd = function (map) {
             var div = L.DomUtil.create('div', 'info legend');
-            // Daftar kategori manual untuk legenda (bisa ditambah/dikurangi)
-            var grades = ['Kawasan Hutan Lindung', 'RTH', 'Perumahan', 'Kawasan Industri', 'Perdagangan dan Jasa', 'Perkebunan'];
-            
-            div.innerHTML += '<strong>Legenda</strong><br>';
-            for (var i = 0; i < grades.length; i++) {
-                div.innerHTML +=
-                    '<i style="background:' + getColor(grades[i]) + '"></i> ' +
-                    grades[i] + '<br>';
+            var categories = ['Kawasan Hutan Lindung', 'RTH', 'Kawasan Permukiman', 'Perdagangan dan Jasa', 'Kawasan Industri', 'Pertanian'];
+            div.innerHTML += '<strong>Legenda</strong><br><hr style="margin:5px 0;">';
+            for (var i = 0; i < categories.length; i++) {
+                div.innerHTML += '<i style="background:' + getColor(categories[i]) + '"></i> ' + categories[i] + '<br>';
             }
             return div;
         };
         legend.addTo(map);
 
-        // --- FITUR GPS / GEOLOCATION ---
+        // --- 6. FUNGSI GPS ---
         var userMarker, userCircle;
-
         function cariLokasi() {
-            if (!map) return;
-            // Menampilkan loading sederhana di tombol
-            document.querySelector('.btn-gps').innerText = "Mencari...";
-            
-            map.locate({setView: true, maxZoom: 16, enableHighAccuracy: true});
+            var btn = document.querySelector('.btn-gps');
+            btn.innerText = "Mencari...";
+            map.locate({setView: true, maxZoom: 17, enableHighAccuracy: true});
         }
-
         function onLocationFound(e) {
             var radius = e.accuracy / 2;
-            
-            // Hapus marker lama jika ada
             if (userMarker) map.removeLayer(userMarker);
             if (userCircle) map.removeLayer(userCircle);
-
-            // Tambahkan marker baru
-            userMarker = L.marker(e.latlng).addTo(map)
-                .bindPopup("Posisi Anda (Akurasi: " + Math.ceil(radius) + " m)").openPopup();
-            
+            userMarker = L.marker(e.latlng).addTo(map).bindPopup("Lokasi Anda").openPopup();
             userCircle = L.circle(e.latlng, radius).addTo(map);
-
-            // Kembalikan teks tombol
             document.querySelector('.btn-gps').innerText = "📍 Lokasi Saya";
         }
-
         function onLocationError(e) {
-            alert("Gagal mendeteksi lokasi: " + e.message);
+            alert("Gagal mendeteksi lokasi.");
             document.querySelector('.btn-gps').innerText = "📍 Lokasi Saya";
         }
-
         map.on('locationfound', onLocationFound);
         map.on('locationerror', onLocationError);
 
