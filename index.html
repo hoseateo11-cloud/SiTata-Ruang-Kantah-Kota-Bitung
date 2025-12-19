@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Web GIS RTRW Kota Bitung</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+    <style>
+        /* Mengatur halaman agar penuh */
+        body { margin: 0; padding: 0; }
+        #map { height: 100vh; width: 100%; }
+
+        /* Gaya untuk Tombol GPS */
+        .btn-gps {
+            position: absolute;
+            top: 80px; /* Jarak dari atas (di bawah tombol zoom) */
+            left: 10px;
+            z-index: 1000;
+            background: white;
+            padding: 8px 10px;
+            border: 2px solid rgba(0,0,0,0.2);
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        .btn-gps:hover { background: #f4f4f4; }
+        .btn-gps:active { background: #e0e0e0; }
+
+        /* Gaya untuk Legenda */
+        .info {
+            padding: 6px 8px;
+            font: 12px Arial, Helvetica, sans-serif;
+            background: white;
+            background: rgba(255,255,255,0.95);
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            border-radius: 5px;
+            max-height: 300px;
+            overflow-y: auto; /* Scroll jika legenda terlalu panjang */
+        }
+        .legend { line-height: 18px; color: #555; }
+        .legend i {
+            width: 18px; height: 18px;
+            float: left; margin-right: 8px; opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+
+    <button class="btn-gps" onclick="cariLokasi()">📍 Lokasi Saya</button>
+
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        // 1. Inisialisasi Peta (Koordinat Bitung)
+        var map = L.map('map').setView([1.445, 125.15], 12);
+
+        // 2. Tambahkan Basemap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19
+        }).addTo(map);
+
+        // 3. Logika Warna (Sesuaikan dengan pola ruang di Bitung)
+        function getColor(pola) {
+            // Pastikan penulisan case SAMA PERSIS dengan data di tabel atribut
+            switch (pola) {
+                // KAWASAN LINDUNG (Nuansa Hijau/Biru)
+                case 'Kawasan Hutan Lindung': return '#228B22'; // ForestGreen
+                case 'Hutan Lindung': return '#228B22';
+                case 'RTH': return '#32CD32';                   // LimeGreen
+                case 'Resapan Air': return '#2E8B57';           // SeaGreen
+                case 'Sempadan Sungai dan Pantai': return '#00FA9A';
+                case 'Bakau': return '#008080';
+                
+                // KAWASAN BUDIDAYA
+                case 'Perumahan': return '#FFFF00';             // Kuning
+                case 'Kawasan Pemukiman': return '#FFFF00';
+                case 'Perdagangan dan Jasa': return '#FF4500';  // Oranye Merah
+                case 'Kawasan Industri': return '#8B0000';      // Merah Tua
+                case 'Perkebunan': return '#DAA520';            // GoldenRod
+                case 'Pertanian': return '#DAA520';
+                case 'Pariwisata': return '#FF69B4';            // Pink
+                case 'Perkantoran': return '#800080';           // Ungu
+                case 'Transportasi': return '#DC143C';          // Crimson
+                
+                default: return '#808080'; // Abu-abu jika tidak terdaftar
+            }
+        }
+
+        // 4. Style GeoJSON
+        function style(feature) {
+            return {
+                fillColor: getColor(feature.properties.POLA_RUANG), // Pastikan kolom ini benar
+                weight: 1,
+                opacity: 1,
+                color: 'white',
+                dashArray: '3',
+                fillOpacity: 0.7
+            };
+        }
+
+        // 5. Popup Informasi
+        function onEachFeature(feature, layer) {
+            if (feature.properties) {
+                var content = `
+                    <div style="font-size:14px">
+                        <strong>${feature.properties.POLA_RUANG}</strong><br>
+                        <hr style="margin:5px 0">
+                        Kategori: ${feature.properties.KAWASAN_LI || '-'}<br>
+                        Luas: ${feature.properties.Hectares ? feature.properties.Hectares.toFixed(2) + ' Ha' : '-'}
+                    </div>
+                `;
+                layer.bindPopup(content);
+            }
+        }
+
+        // 6. Memuat File GeoJSON
+        fetch('rtrw_fix.geojson')
+            .then(res => res.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    style: style,
+                    onEachFeature: onEachFeature
+                }).addTo(map);
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Gagal memuat peta. Pastikan file 'rtrw_fix.geojson' ada dan koordinatnya sudah WGS84.");
+            });
+
+        // 7. Legenda Peta
+        var legend = L.control({position: 'bottomright'});
+        legend.onAdd = function (map) {
+            var div = L.DomUtil.create('div', 'info legend');
+            // Daftar kategori manual untuk legenda (bisa ditambah/dikurangi)
+            var grades = ['Kawasan Hutan Lindung', 'RTH', 'Perumahan', 'Kawasan Industri', 'Perdagangan dan Jasa', 'Perkebunan'];
+            
+            div.innerHTML += '<strong>Legenda</strong><br>';
+            for (var i = 0; i < grades.length; i++) {
+                div.innerHTML +=
+                    '<i style="background:' + getColor(grades[i]) + '"></i> ' +
+                    grades[i] + '<br>';
+            }
+            return div;
+        };
+        legend.addTo(map);
+
+        // --- FITUR GPS / GEOLOCATION ---
+        var userMarker, userCircle;
+
+        function cariLokasi() {
+            if (!map) return;
+            // Menampilkan loading sederhana di tombol
+            document.querySelector('.btn-gps').innerText = "Mencari...";
+            
+            map.locate({setView: true, maxZoom: 16, enableHighAccuracy: true});
+        }
+
+        function onLocationFound(e) {
+            var radius = e.accuracy / 2;
+            
+            // Hapus marker lama jika ada
+            if (userMarker) map.removeLayer(userMarker);
+            if (userCircle) map.removeLayer(userCircle);
+
+            // Tambahkan marker baru
+            userMarker = L.marker(e.latlng).addTo(map)
+                .bindPopup("Posisi Anda (Akurasi: " + Math.ceil(radius) + " m)").openPopup();
+            
+            userCircle = L.circle(e.latlng, radius).addTo(map);
+
+            // Kembalikan teks tombol
+            document.querySelector('.btn-gps').innerText = "📍 Lokasi Saya";
+        }
+
+        function onLocationError(e) {
+            alert("Gagal mendeteksi lokasi: " + e.message);
+            document.querySelector('.btn-gps').innerText = "📍 Lokasi Saya";
+        }
+
+        map.on('locationfound', onLocationFound);
+        map.on('locationerror', onLocationError);
+
+    </script>
+</body>
+</html>
