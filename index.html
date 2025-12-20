@@ -1,9 +1,29 @@
+Tentu, ini adalah perbaikan sesuai keinginan Anda.
+
+Poin-poin Perubahan:
+
+Warna Pertanian/Perkebunan: Saya ubah menjadi Hijau Segar (#4CAF50). Warna ini lebih "hijau" dan melambangkan vegetasi budidaya, namun tetap berbeda dengan Hutan Lindung (Hijau Tua Gelap) agar tidak tertukar.
+
+Legenda: Kembali ke mode manual (statis) seperti sebelumnya.
+
+Tidak lagi menampilkan "10 Terbesar".
+
+Daftar kategori dipilih manual agar rapi.
+
+Tidak ada angka luasan (Ha) di dalam legenda, hanya warna dan nama.
+
+Basemap: Default tetap Google Satellite.
+
+Silakan Copy-Paste kode lengkap ini:
+
+HTML
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Web GIS RTRW Kota Bitung (Top 10)</title>
+    <title>Web GIS RTRW Kota Bitung</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
@@ -37,10 +57,10 @@
         .btn-gps.loading { color: #007bff; animation: pulse 1s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
-        /* --- UI LEGENDA OTOMATIS --- */
+        /* --- UI LEGENDA (MANUAL & BERSIH) --- */
         .legend-control {
             background: white; padding: 10px; border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.4); max-width: 260px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.4); max-width: 250px;
             font-size: 12px; line-height: 1.5; margin-bottom: 25px;
         }
         .legend-header {
@@ -48,17 +68,16 @@
             font-weight: bold; margin-bottom: 5px; cursor: pointer;
             padding-bottom: 5px; border-bottom: 1px solid #eee;
         }
-        .legend-content { max-height: 300px; overflow-y: auto; display: block; } /* Default open */
+        .legend-content { max-height: 300px; overflow-y: auto; display: block; }
         .legend-item { display: flex; align-items: center; margin-bottom: 5px; }
         .legend-color { width: 18px; height: 18px; margin-right: 8px; border: 1px solid #999; flex-shrink: 0; }
-        .legend-area { font-size: 10px; color: #666; margin-left: auto; padding-left: 5px; }
 
         /* --- CSS TWEAKS --- */
-        .leaflet-top.leaflet-right { top: 70px !important; } /* Geser tombol layer ke bawah */
+        .leaflet-top.leaflet-right { top: 70px !important; }
         
         @media (max-width: 600px) {
             .leaflet-control-zoom { display: none; }
-            .legend-content { display: none; } /* Default closed di HP */
+            .legend-content { display: none; }
             .legend-content.show { display: block; }
             .legend-control { width: 220px; margin-left: 10px !important; margin-bottom: 80px !important; }
             .btn-gps { bottom: 90px; }
@@ -79,7 +98,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        // --- 1. BASEMAPS (DEFAULT GOOGLE SATELLITE) ---
+        // --- 1. BASEMAPS (Default: Google Satellite) ---
         var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap', maxZoom: 19
         });
@@ -92,11 +111,11 @@
             maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '© Google Map'
         });
 
-        // Setup Peta: Default layers diisi [googleSat] agar langsung satelit
+        // Map Setup
         var map = L.map('map', {
             center: [1.445, 125.15], 
             zoom: 12, 
-            layers: [googleSat], 
+            layers: [googleSat], // Default layer
             zoomControl: false 
         });
 
@@ -115,22 +134,23 @@
             var p = pola.trim(); 
 
             switch (p) {
-                // === PERTANIAN / PERKEBUNAN (WARNA BARU: AVOCADO GREEN) ===
-                // Warna ini (#88B04B) berbeda dengan Hutan (#1E8F53) dan RTH (#89CD66)
+                // === PERTANIAN / PERKEBUNAN (WARNA HIJAU VEGETASI) ===
+                // Menggunakan #4CAF50 (Standard Green/Hijau Daun)
+                // Berbeda dengan Hutan Lindung (#1E8F53) yang lebih gelap
                 case 'Pertanian':
                 case 'Pertanian Lahan Basah':
                 case 'Pertanian Lahan Kering':
                 case 'Perkebunan':
                 case 'Kawasan Pertanian':
-                    return '#88B04B'; 
+                    return '#4CAF50'; 
 
                 // === KAWASAN LINDUNG ===
-                case 'Kawasan Hutan Lindung':           return '#1E8F53'; // Hijau Tua
+                case 'Kawasan Hutan Lindung':           return '#1E8F53'; // Hijau Tua Gelap
                 case 'Hutan Lindung':                   return '#1E8F53';
                 case 'Hutan Produksi Terbatas':         return '#5CA973';
                 case 'Hutan Produksi Tetap':            return '#7BBD8B'; 
                 case 'Cagar Alam':                      return '#4D084C'; 
-                case 'RTH':                             return '#89CD66'; // Hijau Terang
+                case 'RTH':                             return '#89CD66'; // Hijau Muda Terang
                 case 'Resapan Air':                     return '#A3E39B'; 
                 case 'Sempadan Sungai dan Pantai':      return '#99FF99';
                 case 'Bakau':                           return '#28583B'; 
@@ -151,6 +171,7 @@
                 case 'Pelabuhan Laut':                  return '#005CE6'; 
                 case 'Bandar Udara':                    return '#005CE6'; 
                 case 'Pertahanan dan Keamanan':         return '#4C0073'; 
+                case 'Pertambangan Mineral dan Batubara': return '#594F4F';
                 
                 default: return '#EBE5D9'; 
             }
@@ -163,105 +184,75 @@
             };
         }
 
-        // --- 3. FUNGSI UNTUK MENORMALISASI NAMA (PENGGABUNGAN KATEGORI) ---
-        // Agar "Pertanian" dan "Perkebunan" dihitung sebagai satu kesatuan luasan
-        function getGroupName(pola) {
-            if (!pola) return "Lainnya";
-            var p = pola.trim();
-            if (['Pertanian', 'Perkebunan', 'Pertanian Lahan Kering', 'Pertanian Lahan Basah'].includes(p)) {
-                return 'Pertanian / Perkebunan';
-            }
-            if (['Kawasan Permukiman', 'Perumahan', 'Permukiman Pedesaan'].includes(p)) {
-                return 'Kawasan Permukiman';
-            }
-            return p;
-        }
-
-        // --- 4. LOAD DATA & LOGIKA TOP 10 LEGENDA ---
+        // --- 3. LOAD DATA GEOJSON ---
         fetch('rtrw_fix.geojson')
             .then(res => res.json())
             .then(data => {
-                // A. Tampilkan Peta
                 L.geoJSON(data, {
                     style: style,
                     onEachFeature: function(feature, layer) {
                         if (feature.properties) {
                              layer.bindPopup(`
                                 <div style='font-size:13px'>
-                                <b>${feature.properties.POLA_RUANG}</b><br>
-                                Luas: ${feature.properties.Hectares ? feature.properties.Hectares.toFixed(2) + ' Ha' : '-'}
+                                <h4 style="margin:0 0 5px 0; color:#333">${feature.properties.POLA_RUANG}</h4>
+                                <hr style="margin:5px 0; border:0; border-top:1px solid #ccc">
+                                Kategori: <b>${feature.properties.KAWASAN_LI || "-"}</b><br>
+                                Luas: <b>${feature.properties.Hectares ? feature.properties.Hectares.toFixed(2) + ' Ha' : '-'}</b>
                                 </div>
                              `);
                         }
                     }
                 }).addTo(map);
-
-                // B. Hitung Statistik Luasan untuk Legenda
-                var stats = {};
-                
-                data.features.forEach(function(f) {
-                    // Ambil nama grup (yang sudah disatukan)
-                    var group = getGroupName(f.properties.POLA_RUANG);
-                    var luas = f.properties.Hectares || 0; // Pastikan ada kolom Hectares
-                    
-                    if (!stats[group]) {
-                        stats[group] = { area: 0, color: getColor(f.properties.POLA_RUANG) };
-                    }
-                    stats[group].area += luas;
-                });
-
-                // C. Ubah ke Array dan Urutkan (Terbesar ke Terkecil)
-                var sortedItems = Object.keys(stats).map(function(key) {
-                    return { label: key, area: stats[key].area, color: stats[key].color };
-                }).sort(function(a, b) {
-                    return b.area - a.area; // Descending
-                });
-
-                // D. Ambil Top 10 Saja
-                var top10 = sortedItems.slice(0, 10);
-
-                // E. Buat HTML Legenda
-                createDynamicLegend(top10);
             })
             .catch(err => console.error("Error:", err));
 
 
-        // --- 5. PEMBUATAN LEGENDA DINAMIS ---
-        function createDynamicLegend(items) {
-            var legend = L.control({position: 'bottomleft'});
+        // --- 4. LEGENDA MANUAL (KEMBALI KE TAMPILAN MENARIK & BERSIH) ---
+        var legend = L.control({position: 'bottomleft'});
+        
+        legend.onAdd = function (map) {
+            var div = L.DomUtil.create('div', 'legend-control');
             
-            legend.onAdd = function (map) {
-                var div = L.DomUtil.create('div', 'legend-control');
-                
-                var html = `
-                    <div class="legend-header" onclick="toggleLegend()">
-                        <span>10 Pola Ruang Terbesar</span>
-                        <i id="legend-icon" class="fas fa-chevron-down"></i>
-                    </div>
-                    <div class="legend-content" id="legend-content">
-                `;
+            // Daftar Legenda Manual (Dipilih yang penting saja agar rapi)
+            var legendItems = [
+                {label: 'Kawasan Hutan Lindung', color: getColor('Kawasan Hutan Lindung')},
+                {label: 'Hutan Produksi', color: getColor('Hutan Produksi Tetap')},
+                {label: 'RTH / Resapan Air', color: getColor('RTH')},
+                // Item Pertanian dengan warna Baru
+                {label: 'Pertanian / Perkebunan', color: getColor('Pertanian')},
+                {label: 'Permukiman', color: getColor('Kawasan Permukiman')},
+                {label: 'Perdagangan & Jasa', color: getColor('Perdagangan dan Jasa')},
+                {label: 'Kawasan Industri', color: getColor('Kawasan Industri')},
+                {label: 'Perkantoran', color: getColor('Perkantoran')},
+                {label: 'Pariwisata', color: getColor('Pariwisata')},
+                {label: 'Pelabuhan / Bandara', color: getColor('Bandar Udara')},
+                {label: 'Pertahanan Keamanan', color: getColor('Pertahanan dan Keamanan')},
+                {label: 'Energi / Tambang', color: getColor('Pertambangan Mineral dan Batubara')}
+            ];
+            
+            var html = `
+                <div class="legend-header" onclick="toggleLegend()">
+                    <span>Legenda Pola Ruang</span>
+                    <i id="legend-icon" class="fas fa-chevron-down"></i>
+                </div>
+                <div class="legend-content" id="legend-content">
+            `;
 
-                items.forEach(function(item) {
-                    // Format angka ribuan
-                    var luasFmt = item.area.toLocaleString('id-ID', {maximumFractionDigits: 0});
-                    
-                    html += `
-                        <div class="legend-item">
-                            <div class="legend-color" style="background:${item.color}"></div>
-                            <span>${item.label}</span>
-                            <span class="legend-area">${luasFmt} Ha</span>
-                        </div>`;
-                });
-                
-                html += `</div>`;
-                div.innerHTML = html;
-                
-                // Mencegah klik pada legenda menembus ke peta
-                L.DomEvent.disableClickPropagation(div);
-                return div;
-            };
-            legend.addTo(map);
-        }
+            legendItems.forEach(function(item) {
+                html += `
+                    <div class="legend-item">
+                        <div class="legend-color" style="background:${item.color}"></div>
+                        <span>${item.label}</span>
+                    </div>`;
+            });
+            
+            html += `</div>`;
+            div.innerHTML = html;
+            
+            L.DomEvent.disableClickPropagation(div);
+            return div;
+        };
+        legend.addTo(map);
 
         function toggleLegend() {
             var content = document.getElementById('legend-content');
@@ -273,7 +264,7 @@
             }
         }
 
-        // --- 6. SEARCH & GPS ---
+        // --- 5. SEARCH & GPS ---
         var searchMarker;
         function cariKoordinat() {
             var input = document.getElementById('coordInput').value.replace(/\s/g, ''); 
