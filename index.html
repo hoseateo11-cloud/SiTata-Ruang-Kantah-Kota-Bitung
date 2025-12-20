@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Web GIS RTRW Kota Bitung</title>
+    <title>Web GIS RTRW Kota Bitung (Top 10)</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
@@ -12,37 +12,35 @@
         body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; }
         #map { height: 100vh; width: 100vw; }
 
-        /* --- SEARCH BAR --- */
+        /* --- UI SEARCH BAR --- */
         .search-container {
             position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
-            z-index: 1000; width: 90%; max-width: 400px;
-            display: flex; box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            z-index: 1000; width: 90%; max-width: 400px; display: flex;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
         .search-input {
-            width: 100%; padding: 12px 15px; border: none;
-            border-radius: 25px 0 0 25px; font-size: 14px; outline: none;
+            width: 100%; padding: 12px 15px; border: none; border-radius: 25px 0 0 25px;
+            font-size: 14px; outline: none;
         }
         .search-btn {
-            background: #007bff; color: white; border: none;
-            padding: 0 20px; border-radius: 0 25px 25px 0; cursor: pointer;
+            background: #007bff; color: white; border: none; padding: 0 20px;
+            border-radius: 0 25px 25px 0; cursor: pointer;
         }
 
-        /* --- TOMBOL GPS --- */
+        /* --- UI GPS BUTTON --- */
         .btn-gps {
             position: absolute; bottom: 40px; right: 15px; z-index: 900;
             background: white; color: #444; width: 50px; height: 50px;
-            border-radius: 50%; border: none;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            cursor: pointer; display: flex; align-items: center; justify-content: center;
-            font-size: 20px;
+            border-radius: 50%; border: none; box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 20px;
         }
         .btn-gps.loading { color: #007bff; animation: pulse 1s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 
-        /* --- LEGENDA --- */
+        /* --- UI LEGENDA OTOMATIS --- */
         .legend-control {
             background: white; padding: 10px; border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.2); max-width: 250px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.4); max-width: 260px;
             font-size: 12px; line-height: 1.5; margin-bottom: 25px;
         }
         .legend-header {
@@ -50,21 +48,19 @@
             font-weight: bold; margin-bottom: 5px; cursor: pointer;
             padding-bottom: 5px; border-bottom: 1px solid #eee;
         }
-        .legend-content { max-height: 250px; overflow-y: auto; display: block; }
-        .legend-item { display: flex; align-items: center; margin-bottom: 4px; }
-        .legend-color { width: 18px; height: 18px; margin-right: 8px; border: 1px solid #ccc; flex-shrink: 0; }
+        .legend-content { max-height: 300px; overflow-y: auto; display: block; } /* Default open */
+        .legend-item { display: flex; align-items: center; margin-bottom: 5px; }
+        .legend-color { width: 18px; height: 18px; margin-right: 8px; border: 1px solid #999; flex-shrink: 0; }
+        .legend-area { font-size: 10px; color: #666; margin-left: auto; padding-left: 5px; }
 
-        /* --- CSS KHUSUS --- */
-        .leaflet-top.leaflet-right { top: 70px !important; }
-        .popup-content h4 { margin: 0 0 5px 0; color: #333; font-weight: bold; }
-        .popup-content table { width: 100%; font-size: 13px; }
-
-        /* Mobile Responsive */
+        /* --- CSS TWEAKS --- */
+        .leaflet-top.leaflet-right { top: 70px !important; } /* Geser tombol layer ke bawah */
+        
         @media (max-width: 600px) {
             .leaflet-control-zoom { display: none; }
-            .legend-content { display: none; }
+            .legend-content { display: none; } /* Default closed di HP */
             .legend-content.show { display: block; }
-            .legend-control { width: 200px; margin-left: 10px !important; margin-bottom: 80px !important; }
+            .legend-control { width: 220px; margin-left: 10px !important; margin-bottom: 80px !important; }
             .btn-gps { bottom: 90px; }
         }
     </style>
@@ -76,81 +72,85 @@
         <button class="search-btn" onclick="cariKoordinat()"><i class="fas fa-search"></i></button>
     </div>
 
-    <button class="btn-gps" onclick="cariLokasi()" title="Lokasi Saya">
-        <i class="fas fa-crosshairs"></i>
-    </button>
+    <button class="btn-gps" onclick="cariLokasi()" title="Lokasi Saya"><i class="fas fa-crosshairs"></i></button>
 
     <div id="map"></div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        // --- 1. BASEMAPS ---
+        // --- 1. BASEMAPS (DEFAULT GOOGLE SATELLITE) ---
         var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '© OpenStreetMap', maxZoom: 19
         });
+        
         var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
             maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '© Google Map'
         });
+        
         var googleHybrid = L.tileLayer('http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',{
             maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '© Google Map'
         });
 
+        // Setup Peta: Default layers diisi [googleSat] agar langsung satelit
         var map = L.map('map', {
-            center: [1.445, 125.15], zoom: 12, layers: [osmLayer], zoomControl: false 
+            center: [1.445, 125.15], 
+            zoom: 12, 
+            layers: [googleSat], 
+            zoomControl: false 
         });
 
-        var baseMaps = { "Peta Jalan": osmLayer, "Satelit (Polos)": googleSat, "Satelit (Label)": googleHybrid };
+        var baseMaps = { 
+            "Satelit (Polos)": googleSat, 
+            "Satelit (Label)": googleHybrid,
+            "Peta Jalan": osmLayer
+        };
         L.control.layers(baseMaps).addTo(map);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        // --- 2. PEWARNAAN (Custom dengan Penggabungan Pertanian/Perkebunan) ---
+
+        // --- 2. PEWARNAAN ---
         function getColor(pola) {
             if (!pola) return '#F0F0F0';
             var p = pola.trim(); 
 
             switch (p) {
-                // === 1. PERTANIAN & PERKEBUNAN (DIGABUNG) ===
+                // === PERTANIAN / PERKEBUNAN (WARNA BARU: AVOCADO GREEN) ===
+                // Warna ini (#88B04B) berbeda dengan Hutan (#1E8F53) dan RTH (#89CD66)
                 case 'Pertanian':
                 case 'Pertanian Lahan Basah':
                 case 'Pertanian Lahan Kering':
                 case 'Perkebunan':
                 case 'Kawasan Pertanian':
-                    return '#D9E37D'; // Kuning Kehijauan (Gabungan)
+                    return '#88B04B'; 
 
-                // === 2. KAWASAN LINDUNG ===
-                case 'Kawasan Hutan Lindung':           return '#1E8F53'; 
+                // === KAWASAN LINDUNG ===
+                case 'Kawasan Hutan Lindung':           return '#1E8F53'; // Hijau Tua
                 case 'Hutan Lindung':                   return '#1E8F53';
                 case 'Hutan Produksi Terbatas':         return '#5CA973';
                 case 'Hutan Produksi Tetap':            return '#7BBD8B'; 
                 case 'Cagar Alam':                      return '#4D084C'; 
-                case 'Taman Wisata Alam':               return '#38A800';
-                case 'RTH':                             return '#89CD66'; 
+                case 'RTH':                             return '#89CD66'; // Hijau Terang
                 case 'Resapan Air':                     return '#A3E39B'; 
                 case 'Sempadan Sungai dan Pantai':      return '#99FF99';
                 case 'Bakau':                           return '#28583B'; 
                 case 'Mangrove':                        return '#28583B';
 
-                // === 3. PERMUKIMAN ===
+                // === PERMUKIMAN ===
                 case 'Kawasan Permukiman':              return '#F6E125'; 
                 case 'Perumahan':                       return '#F6E125'; 
-                case 'Permukiman Perkotaan':            return '#F3A932'; 
                 case 'Permukiman Pedesaan':             return '#F6E125'; 
 
-                // === 4. EKONOMI & BISNIS ===
+                // === LAINNYA ===
                 case 'Perdagangan dan Jasa':            return '#E60000'; 
                 case 'Kawasan Industri':                return '#FF7F00'; 
                 case 'Perkantoran':                     return '#A75196'; 
                 case 'Pariwisata':                      return '#FF99CC'; 
                 case 'Perikanan':                       return '#6EB5C0'; 
-
-                // === 5. INFRASTRUKTUR & LAINNYA ===
                 case 'Transportasi':                    return '#C4061B'; 
                 case 'Pelabuhan Laut':                  return '#005CE6'; 
                 case 'Bandar Udara':                    return '#005CE6'; 
                 case 'Pertahanan dan Keamanan':         return '#4C0073'; 
-                case 'Pertambangan Mineral dan Batubara': return '#594F4F'; 
-                case 'Pembangkit Tenaga Listrik':       return '#594F4F';
                 
                 default: return '#EBE5D9'; 
             }
@@ -159,76 +159,109 @@
         function style(feature) {
             return {
                 fillColor: getColor(feature.properties.POLA_RUANG),
-                weight: 1, opacity: 1, color: 'white', dashArray: '3', fillOpacity: 0.7
+                weight: 1, opacity: 1, color: 'white', dashArray: '3', fillOpacity: 0.65
             };
         }
 
-        function onEachFeature(feature, layer) {
-            if (feature.properties) {
-                var content = `
-                    <div class="popup-content">
-                        <h4>${feature.properties.POLA_RUANG || "Zona"}</h4>
-                        <hr style="border:0; border-top:1px solid #eee; margin:5px 0;">
-                        <table>
-                            <tr><td style="color:#666">Kategori</td><td>: <b>${feature.properties.KAWASAN_LI || "-"}</b></td></tr>
-                            <tr><td style="color:#666">Luas</td><td>: <b>${feature.properties.Hectares ? feature.properties.Hectares.toFixed(2) + ' Ha' : '-'}</b></td></tr>
-                        </table>
-                    </div>
-                `;
-                layer.bindPopup(content);
+        // --- 3. FUNGSI UNTUK MENORMALISASI NAMA (PENGGABUNGAN KATEGORI) ---
+        // Agar "Pertanian" dan "Perkebunan" dihitung sebagai satu kesatuan luasan
+        function getGroupName(pola) {
+            if (!pola) return "Lainnya";
+            var p = pola.trim();
+            if (['Pertanian', 'Perkebunan', 'Pertanian Lahan Kering', 'Pertanian Lahan Basah'].includes(p)) {
+                return 'Pertanian / Perkebunan';
             }
+            if (['Kawasan Permukiman', 'Perumahan', 'Permukiman Pedesaan'].includes(p)) {
+                return 'Kawasan Permukiman';
+            }
+            return p;
         }
 
-        // --- LOAD DATA ---
+        // --- 4. LOAD DATA & LOGIKA TOP 10 LEGENDA ---
         fetch('rtrw_fix.geojson')
             .then(res => res.json())
             .then(data => {
-                L.geoJSON(data, { style: style, onEachFeature: onEachFeature }).addTo(map);
-            })
-            .catch(err => console.error("Error loading GeoJSON:", err));
+                // A. Tampilkan Peta
+                L.geoJSON(data, {
+                    style: style,
+                    onEachFeature: function(feature, layer) {
+                        if (feature.properties) {
+                             layer.bindPopup(`
+                                <div style='font-size:13px'>
+                                <b>${feature.properties.POLA_RUANG}</b><br>
+                                Luas: ${feature.properties.Hectares ? feature.properties.Hectares.toFixed(2) + ' Ha' : '-'}
+                                </div>
+                             `);
+                        }
+                    }
+                }).addTo(map);
 
-        // --- LEGENDA (Diperlengkap sesuai request) ---
-        var legend = L.control({position: 'bottomleft'});
-        legend.onAdd = function (map) {
-            var div = L.DomUtil.create('div', 'legend-control');
+                // B. Hitung Statistik Luasan untuk Legenda
+                var stats = {};
+                
+                data.features.forEach(function(f) {
+                    // Ambil nama grup (yang sudah disatukan)
+                    var group = getGroupName(f.properties.POLA_RUANG);
+                    var luas = f.properties.Hectares || 0; // Pastikan ada kolom Hectares
+                    
+                    if (!stats[group]) {
+                        stats[group] = { area: 0, color: getColor(f.properties.POLA_RUANG) };
+                    }
+                    stats[group].area += luas;
+                });
+
+                // C. Ubah ke Array dan Urutkan (Terbesar ke Terkecil)
+                var sortedItems = Object.keys(stats).map(function(key) {
+                    return { label: key, area: stats[key].area, color: stats[key].color };
+                }).sort(function(a, b) {
+                    return b.area - a.area; // Descending
+                });
+
+                // D. Ambil Top 10 Saja
+                var top10 = sortedItems.slice(0, 10);
+
+                // E. Buat HTML Legenda
+                createDynamicLegend(top10);
+            })
+            .catch(err => console.error("Error:", err));
+
+
+        // --- 5. PEMBUATAN LEGENDA DINAMIS ---
+        function createDynamicLegend(items) {
+            var legend = L.control({position: 'bottomleft'});
             
-            // Daftar Item Legenda yang LEBIH LENGKAP
-            var legendItems = [
-                {label: 'Kawasan Hutan Lindung', color: getColor('Kawasan Hutan Lindung')},
-                {label: 'Hutan Produksi', color: getColor('Hutan Produksi Tetap')},
-                {label: 'RTH / Resapan Air', color: getColor('RTH')},
-                // Item Gabungan Baru
-                {label: 'Pertanian / Perkebunan', color: getColor('Pertanian')},
-                {label: 'Perikanan', color: getColor('Perikanan')},
-                {label: 'Permukiman', color: getColor('Perumahan')},
-                {label: 'Perdagangan & Jasa', color: getColor('Perdagangan dan Jasa')},
-                {label: 'Kawasan Industri', color: getColor('Kawasan Industri')},
-                {label: 'Perkantoran', color: getColor('Perkantoran')},
-                {label: 'Pariwisata', color: getColor('Pariwisata')},
-                {label: 'Transportasi (Laut/Udara)', color: getColor('Bandar Udara')},
-                {label: 'Pertahanan Keamanan', color: getColor('Pertahanan dan Keamanan')},
-                {label: 'Energi / Pertambangan', color: getColor('Pembangkit Tenaga Listrik')}
-            ];
-            
-            var html = `
-                <div class="legend-header" onclick="toggleLegend()">
-                    <span>Legenda Pola Ruang</span>
-                    <i id="legend-icon" class="fas fa-chevron-down"></i>
-                </div>
-                <div class="legend-content" id="legend-content">
-            `;
-            legendItems.forEach(item => {
-                html += `
-                    <div class="legend-item">
-                        <div class="legend-color" style="background:${item.color}"></div>
-                        <span>${item.label}</span>
-                    </div>`;
-            });
-            html += `</div>`;
-            div.innerHTML = html;
-            return div;
-        };
-        legend.addTo(map);
+            legend.onAdd = function (map) {
+                var div = L.DomUtil.create('div', 'legend-control');
+                
+                var html = `
+                    <div class="legend-header" onclick="toggleLegend()">
+                        <span>10 Pola Ruang Terbesar</span>
+                        <i id="legend-icon" class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="legend-content" id="legend-content">
+                `;
+
+                items.forEach(function(item) {
+                    // Format angka ribuan
+                    var luasFmt = item.area.toLocaleString('id-ID', {maximumFractionDigits: 0});
+                    
+                    html += `
+                        <div class="legend-item">
+                            <div class="legend-color" style="background:${item.color}"></div>
+                            <span>${item.label}</span>
+                            <span class="legend-area">${luasFmt} Ha</span>
+                        </div>`;
+                });
+                
+                html += `</div>`;
+                div.innerHTML = html;
+                
+                // Mencegah klik pada legenda menembus ke peta
+                L.DomEvent.disableClickPropagation(div);
+                return div;
+            };
+            legend.addTo(map);
+        }
 
         function toggleLegend() {
             var content = document.getElementById('legend-content');
@@ -240,7 +273,7 @@
             }
         }
 
-        // --- LOGIKA PENCARIAN & GPS ---
+        // --- 6. SEARCH & GPS ---
         var searchMarker;
         function cariKoordinat() {
             var input = document.getElementById('coordInput').value.replace(/\s/g, ''); 
@@ -249,7 +282,7 @@
                 var lat = parseFloat(coords[0]); var lng = parseFloat(coords[1]);
                 if (!isNaN(lat) && !isNaN(lng)) {
                     if (searchMarker) map.removeLayer(searchMarker);
-                    searchMarker = L.marker([lat, lng]).addTo(map).bindPopup("Lokasi Pencarian").openPopup();
+                    searchMarker = L.marker([lat, lng]).addTo(map).bindPopup("Lokasi Dicari").openPopup();
                     map.flyTo([lat, lng], 17);
                 } else { alert("Koordinat tidak valid!"); }
             } else { alert("Format: Latitude,Longitude"); }
