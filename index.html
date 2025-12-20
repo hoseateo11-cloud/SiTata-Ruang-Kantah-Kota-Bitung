@@ -121,20 +121,23 @@
                 case 'Pertanian Lahan Basah':
                 case 'Pertanian Lahan Kering':
                 case 'Pertanian/Perkebunan':
+                case 'Perkebunan':
                 case 'Kawasan Pertanian':
                     return '#4CAF50'; 
 
                 // === KAWASAN LINDUNG ===
-                case 'Kawasan Hutan Lindung':           return '#1E8F53'; // Hijau Tua Gelap
-                case 'Hutan Lindung':                   return '#1E8F53';
+                case 'Kawasan Hutan Lindung':           return '#0a5c0a'; // Hijau Tua Gelap
+                case 'Hutan Lindung':                   return '#0a5c0a';
                 case 'Hutan Produksi Terbatas':         return '#5CA973';
-                case 'Hutan Produksi Tetap':            return '#7BBD8B'; 
+                case 'Kawasan Hutan Rakyat':            return '#7BBD8B'; 
+                case 'Kawasan Hutan Wisata':            return '#7BBD8B';
                 case 'Cagar Alam':                      return '#4D084C'; 
                 case 'RTH':                             return '#89CD66'; // Hijau Muda Terang
                 case 'Resapan Air':                     return '#A3E39B'; 
                 case 'Sempadan Sungai dan Pantai':      return '#99FF99';
                 case 'Bakau':                           return '#28583B'; 
-                case 'Mangrove':                        return '#28583B';
+                case 'Kawasan Pantai Berhutan Bakau':   return '#28583B';
+                case 'Suaka Alam Laut':                 return '#9bc9e3';
 
                 // === PERMUKIMAN ===
                 case 'Kawasan Permukiman':              return '#F6E125'; 
@@ -144,11 +147,21 @@
                 // === LAINNYA ===
                 case 'Perdagangan dan Jasa':            return '#E60000'; 
                 case 'Kawasan Industri':                return '#FF7F00'; 
-                case 'Perkantoran':                     return '#A75196'; 
+                case 'Perkantoran':                     return '#A75196';
+                case 'Pelayanan Umum':                  return '#b94bb9';
+                case 'Pendidikan':                      return '#A75196';
+                case 'Perikanan/Peternakan':            return '#b9ebb9';
                 case 'Pariwisata':                      return '#FF99CC'; 
+                case 'TWA Batu Angus':                  return '#FF99CC';
+                case 'TWA Batu Putih':                  return '#FF99CC'; 
                 case 'Perikanan':                       return '#6EB5C0'; 
                 case 'Transportasi':                    return '#C4061B'; 
-                case 'Pelabuhan Laut':                  return '#005CE6'; 
+                case 'Terminal':                        return '#C4061B'; 
+                case 'Pelabuhan Laut':                  return '#005CE6';
+                case 'Global Hub Port (Terminal-1) Bitung': return '#005CE6';
+                case 'Global Hub Port (Terminal-1) P. Lembeh': return '#005CE6';
+                case 'Global Hub Port (Terminal-2)':    return '#005CE6';
+                case 'Pelabuhan/Terminal Khusus':       return '#005CE6';
                 case 'Bandar Udara':                    return '#005CE6'; 
                 case 'Pertahanan dan Keamanan':         return '#4C0073'; 
                 case 'Pertambangan Mineral dan Batubara': return '#594F4F';
@@ -196,7 +209,7 @@
             // Daftar Legenda Manual (Dipilih yang penting saja agar rapi)
             var legendItems = [
                 {label: 'Kawasan Hutan Lindung', color: getColor('Kawasan Hutan Lindung')},
-                {label: 'Hutan Produksi', color: getColor('Hutan Produksi Tetap')},
+                {label: 'Kawasan Hutan Rakyat', color: getColor('Kawasan Hutan Rakyat')},
                 {label: 'RTH / Resapan Air', color: getColor('RTH')},
                 // Item Pertanian dengan warna Baru
                 {label: 'Pertanian / Perkebunan', color: getColor('Pertanian')},
@@ -205,7 +218,7 @@
                 {label: 'Kawasan Industri', color: getColor('Kawasan Industri')},
                 {label: 'Perkantoran', color: getColor('Perkantoran')},
                 {label: 'Pariwisata', color: getColor('Pariwisata')},
-                {label: 'Pelabuhan / Bandara', color: getColor('Bandar Udara')},
+                {label: 'Pelabuhan', color: getColor('Bandar Udara')},
                 {label: 'Pertahanan Keamanan', color: getColor('Pertahanan dan Keamanan')},
                 {label: 'Energi / Tambang', color: getColor('Pertambangan Mineral dan Batubara')}
             ];
@@ -282,4 +295,5 @@
     </script>
 </body>
 </html>
+
 
